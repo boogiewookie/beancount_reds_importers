@@ -50,6 +50,7 @@ class Importer(csvreader.Importer, investments.Importer):
             'Cash In Lieu':                 'transfer',  # TODO: not handled correctly
             }
         self.skip_transaction_types = ['Journal']
+        self.skip_head_rows = 1
 
     def prepare_table(self, rdr):
         if '' in rdr.fieldnames():
