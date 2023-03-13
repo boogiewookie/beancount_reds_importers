@@ -335,8 +335,7 @@ class Importer(importer.ImporterProtocol):
                              'dividends', 'capgainsd_st', 'capgainsd_lt', 'cash', 'payment', 'check']:
                 entry = self.generate_transfer_entry(ot, file, counter)
             else:
-                print("ERROR: unknown entry type:", ot.type)
-                raise Exception('Unknown entry type')
+                raise Exception(f'Unknown entry type: {ot.type} in {file.name}')
             self.add_fee_postings(entry, ot)
             new_entries.append(entry)
         return new_entries
