@@ -10,7 +10,7 @@ class Importer(csvreader.Importer, investments.Importer):
     def custom_init(self):
         self.max_rounding_error = 0.04
         self.filename_pattern_def = '.*_Transactions_'
-        self.header_identifier = '"Transactions  for account.*'
+        self.header_identifier = rf'"Transactions  for account {self.config.get("account_number", "")}.*'
         self.get_ticker_info = self.get_ticker_info_from_id
         self.date_format = '%m/%d/%Y'
         self.funds_db_txt = 'funds_by_ticker'
@@ -29,16 +29,20 @@ class Importer(csvreader.Importer, investments.Importer):
             }
         self.transaction_type_map = {
             'Bank Interest':                'income',
+            'Bond Interest':                'income',
             'Bank Transfer':                'transfer',
             'Buy':                          'buystock',
             'Reinvestment Adj':             'buystock',
             'Cash Dividend':                'dividends',
+            'Credit Interest':              'income',
             'Div Adjustment':               'dividends',
             'Long Term Cap Gain Reinvest':  'capgainsd_lt',
+            'Non-Qualified Div':            'dividends',
             'Misc Credits':                 'transfer',
             'MoneyLink Deposit':            'transfer',
             'MoneyLink Transfer':           'transfer',
             'Pr Yr Div Reinvest':           'dividends',
+            'Qualified Dividend':           'dividends',
             'Reinvest Dividend':            'dividends',
             'Reinvest Shares':              'buystock',
             'Sell':                         'sellstock',
