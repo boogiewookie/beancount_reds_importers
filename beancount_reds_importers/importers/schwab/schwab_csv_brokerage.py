@@ -30,6 +30,7 @@ class Importer(csvreader.Importer, investments.Importer):
         self.transaction_type_map = {
             'Bank Interest':                'income',
             'Bond Interest':                'income',
+            'CD Interest':                  'income',
             'Bank Transfer':                'transfer',
             'Buy':                          'buystock',
             'Reinvestment Adj':             'buystock',
@@ -38,6 +39,7 @@ class Importer(csvreader.Importer, investments.Importer):
             'Div Adjustment':               'dividends',
             'Long Term Cap Gain Reinvest':  'capgainsd_lt',
             'Non-Qualified Div':            'dividends',
+            'Pr Yr Non-Qual Div':           'dividends',
             'Misc Credits':                 'transfer',
             'MoneyLink Deposit':            'transfer',
             'MoneyLink Transfer':           'transfer',
@@ -51,6 +53,7 @@ class Importer(csvreader.Importer, investments.Importer):
             'Wire Received':                'transfer',
             'Funds Received':               'transfer',
             'Stock Split':                  'transfer',
+            'Spin-off':                     'transfer',  # TODO: not handled correctly
             'Cash In Lieu':                 'transfer',  # TODO: not handled correctly
             }
         self.skip_transaction_types = ['Journal']

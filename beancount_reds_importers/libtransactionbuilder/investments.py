@@ -67,13 +67,17 @@ class Importer(importer.ImporterProtocol):
                 self.config = {k: v.format(**d) if isinstance(v, str) else v for k, v in self.config.items()}
                 self.money_market_funds = self.config['fund_info']['money_market']
                 self.fund_data = self.config['fund_info']['fund_data']  # [(ticker, id, long_name), ...]
-                self.funds_by_id = {i: (ticker, desc) for ticker, i, desc in self.fund_data}
-                self.funds_by_ticker = {ticker: (ticker, desc) for ticker, _, desc in self.fund_data}
+                self.funds_by_id = {i: (ticker, desc) for ticker, i, desc, c in self.fund_data}
+                self.funds_by_ticker = {ticker: (ticker, desc) for ticker, _, desc, c in self.fund_data}
+                self.cdty_by_ticker = {ticker: c for ticker, _, _, c in self.fund_data}
 
                 # Most ofx/csv files refer to funds by id (cusip/isin etc.) Some use tickers instead
                 self.funds_db = getattr(self, getattr(self, 'funds_db_txt', 'funds_by_id'))
                 self.build_account_map()  # TODO: avoid for identify()
             self.initialized = True
+
+    def cdty(self, ticker):
+        return self.cdty_by_ticker[ticker] if ticker in self.cdty_by_ticker else ticker
 
     def build_account_map(self):
         # map transaction types to target posting accounts
@@ -225,10 +229,10 @@ class Importer(importer.ImporterProtocol):
 
         if is_money_market:  # Use price conversions instead of holding these at cost
             common.create_simple_posting_with_price(entry, main_acct,
-                                                    units, ticker, ot.unit_price, self.currency)
+                                                    units, self.cdty(ticker), ot.unit_price, self.currency)
         elif 'sell' in ot.type:
             common.create_simple_posting_with_cost_or_price(entry, main_acct,
-                                                            units, ticker, price_number=ot.unit_price,
+                                                            units, self.cdty(ticker), price_number=ot.unit_price,
                                                             price_currency=self.currency,
                                                             costspec=CostSpec(None, None, None, None, None, None))
             data.create_simple_posting(entry, self.config['cg'].format(ticker=ticker), None, None)
@@ -236,7 +240,7 @@ class Importer(importer.ImporterProtocol):
             # annoyingly, vanguard reinvests have unit_price set to zero. so manually compute it
             if (hasattr(ot, 'security') and ot.security) and ot.units and not ot.unit_price:
                 ot.unit_price = round(abs(ot.total) / ot.units, 4)
-            common.create_simple_posting_with_cost(entry, main_acct, units, ticker, ot.unit_price,
+            common.create_simple_posting_with_cost(entry, main_acct, units, self.cdty(ticker), ot.unit_price,
                                                    self.currency, self.price_cost_both_zero_handler)
 
         # "Other" account posting
@@ -303,9 +307,9 @@ class Importer(importer.ImporterProtocol):
             data.create_simple_posting(entry, config['cash_account'], ot.total, self.currency)
             data.create_simple_posting(entry, target_acct, -1 * ot.total, self.currency)
         else:
-            data.create_simple_posting(entry, main_acct, units, ticker)
+            data.create_simple_posting(entry, main_acct, units, self.cdty(ticker))
             if target_acct:
-                data.create_simple_posting(entry, target_acct, -1 * units, ticker)
+                data.create_simple_posting(entry, target_acct, -1 * units, self.cdty(ticker))
         return entry
 
     def extract_transactions(self, file, counter):
