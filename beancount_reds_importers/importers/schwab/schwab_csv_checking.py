@@ -12,7 +12,7 @@ class Importer(csvreader.Importer, banking.Importer):
     def custom_init(self):
         self.max_rounding_error = 0.04
         self.filename_pattern_def = '.*_Checking_Transactions_'
-        self.header_identifier = '"Transactions  for Checking account.*'
+        self.header_identifier = rf'"Transactions  for Checking account {self.config.get("account_number", "")}.*'
         self.date_format = '%m/%d/%Y'
         self.skip_comments = '# '
         self.header_map = {
@@ -30,6 +30,8 @@ class Importer(csvreader.Importer, banking.Importer):
             "ACH": 'transfer'
         }
         self.skip_transaction_types = ['Journal']
+        self.skip_head_rows = 1
+        self.skip_data_rows = 2
 
     def prepare_table(self, rdr):
         rdr = rdr.addfield('amount',
