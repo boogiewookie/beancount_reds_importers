@@ -13,8 +13,7 @@ class Importer(csvreader.Importer, banking.Importer):
         self.header_identifier = 'Trans. Date,Post Date,Description,Amount,Category'
         self.date_format = '%m/%d/%Y'
         self.header_map = {
-            "Category":    'payee',
-            "Description": 'memo',
+            "Description": 'payee',
             "Trans. Date": 'date',
             "Post Date":   'postDate',
             "Amount":      'amount',
@@ -25,5 +24,6 @@ class Importer(csvreader.Importer, banking.Importer):
 
     def prepare_processed_table(self, rdr):
         # Need to invert numbers supplied by Discover
+        rdr = rdr.addfield('memo', '')
         rdr = rdr.convert('amount', lambda x: -1 * x)
         return rdr
