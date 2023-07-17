@@ -131,3 +131,6 @@ debug
 
 # PyCharm
 .idea/
+
+# vim
+*.swp
