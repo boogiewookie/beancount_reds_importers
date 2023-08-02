@@ -10,6 +10,7 @@ class Importer(csvreader.Importer, banking.Importer):
     IMPORTER_NAME = 'Schwab Checking account CSV'
 
     def custom_init(self):
+        self.year, self.month = self.config.get("ym", "").split('-', 2)
         self.max_rounding_error = 0.04
         self.filename_pattern_def = '.*_Checking_Transactions_'
         self.header_identifier = rf'"Transactions  for Checking account {self.config.get("account_number", "")}.*'
@@ -34,6 +35,7 @@ class Importer(csvreader.Importer, banking.Importer):
         self.skip_data_rows = 2
 
     def prepare_table(self, rdr):
+        rdr = rdr.select('Date', lambda v: (v.startswith(self.month) and v.endswith(self.year)))
         rdr = rdr.addfield('amount',
                            lambda x: "-" + x['Withdrawal (-)'] if x['Withdrawal (-)'] != '' else x['Deposit (+)'])
         rdr = rdr.addfield('memo', lambda x: '')
