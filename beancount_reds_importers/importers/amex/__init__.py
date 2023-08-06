@@ -12,3 +12,11 @@ class Importer(banking.Importer, ofxreader.Importer):
             self.max_rounding_error = 0.04
             self.filename_pattern_def = '.*amex'
             self.custom_init_run = True
+
+    def get_transactions(self):
+        """Make the amount match the type."""
+        for ot in self.ofx_account.statement.transactions:
+            if ot.type == 'debit':
+                ot.amount = -ot.amount
+            yield ot
+
