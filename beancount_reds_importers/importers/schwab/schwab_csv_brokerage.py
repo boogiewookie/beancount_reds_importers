@@ -1,6 +1,7 @@
 """ Schwab Brokerage .csv importer."""
 
 import re
+from decimal import Decimal
 from beancount_reds_importers.libreader import csvreader
 from beancount_reds_importers.libtransactionbuilder import investments
 
@@ -57,8 +58,12 @@ class Importer(csvreader.Importer, investments.Importer):
             'Stock Split':                  'transfer',
             'Spin-off':                     'transfer',  # TODO: not handled correctly
             'Cash In Lieu':                 'transfer',  # TODO: not handled correctly
-            'CD Deposit Adj':               'transfer',
-            'CD Deposit Funds':             'transfer',
+            'CD Deposit Adj':               'selldebt',
+            'CD Deposit Funds':             'selldebt',
+            'CXL Redemption Adj':           'selldebt',
+            'Full Redemption':              'selldebt',
+            'Full Redemption Adj':          'selldebt',
+            'Redemption Adj':               'selldebt',
             }
         self.skip_transaction_types = ['Journal']
         self.skip_head_rows = 1
@@ -110,3 +115,28 @@ class Importer(csvreader.Importer, investments.Importer):
             if acct == want and re.match(rf'"Transactions  for account {raw}.*', head):
                 return True
         return False
+
+    def get_transactions(self):
+        half_sale = {}
+        for ot in self.rdr.namedtuples():
+            if self.skip_transaction(ot):
+                continue
+            if ot.type == 'selldebt':
+                key = f"{ot.tradeDate}_{ot.security}"
+                if key not in half_sale:
+                    half_sale[key] = ot
+                    continue
+                else:
+                    if not ot.units:
+                        ot = ot._replace(units=half_sale[key].units)
+                    elif not ot.total:
+                        ot = ot._replace(total=half_sale[key].total)
+                    if not ot.unit_price:
+                        ot = ot._replace(unit_price=Decimal('1.00'))
+                    del half_sale[key]
+            yield ot
+
+        # just in case there are any unclosed halves left
+        for ot in half_sale.values():
+            yield ot
+
