@@ -4,6 +4,7 @@ beancount_reads_importers to work."""
 import datetime
 import itertools
 import sys
+from decimal import Decimal
 from beancount.core import data
 from beancount.core import amount
 from beancount.ingest import importer
@@ -335,6 +336,13 @@ class Importer(importer.ImporterProtocol):
         for ot in self.get_transactions():
             if self.skip_transaction(ot):
                 continue
+            if ot.type in ['buydebt', 'selldebt']:
+                if ot.units:
+                    ot = ot._replace(units=ot.units/100)
+                if ot.unit_price:
+                    ot = ot._replace(unit_price=ot.unit_price*100)
+                else:
+                    ot = ot._replace(unit_price=Decimal('100'))
             if ot.type in ['buymf', 'sellmf', 'buystock', 'sellstock', 'buyother', 'sellother', 'buydebt', 'selldebt', 'reinvest']:
                 entry = self.generate_trade_entry(ot, file, counter)
             elif ot.type in ['other', 'credit', 'debit', 'transfer', 'dep', 'income',
