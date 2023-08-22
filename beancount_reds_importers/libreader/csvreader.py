@@ -180,6 +180,14 @@ class Importer(reader.Reader, importer.ImporterProtocol):
             rdr = self.convert_columns(rdr)
             rdr = self.fix_column_names(rdr)
             rdr = self.prepare_processed_table(rdr)
+            ym = self.config.get("ym", "")
+            if ym:  # filter events to a 3 month window around ym
+                fotm = datetime.date.fromisoformat(f"{ym}-01")
+                folm = (fotm - datetime.timedelta(days=28)).replace(day=1)
+                fonm = (fotm + datetime.timedelta(days=31)).replace(day=1)
+                def onemonth(row):
+                    return folm <= row.date.date() < fonm
+                rdr = rdr.select(onemonth)
             self.rdr = rdr
             self.ifile = file
             self.file_read_done = True
