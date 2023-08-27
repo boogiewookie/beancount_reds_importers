@@ -67,33 +67,7 @@ class Importer(csvreader.Importer, investments.Importer):
             }
         self.skip_transaction_types = ['Journal']
         self.skip_head_rows = 1
-        self.acctmap = {
-                "...164":                           "0000440000810164",
-                "Kevet Inherited IRA ...020":       "25835020",
-                "Kevet-InheritedIRA ...020":        "25835020",
-                "Kevet Inherited IRA XXXX-5020":    "25835020",
-                "Kevet PledgedAsset ...972":        "30589972",
-                "Kevet-PledgedAsset ...972":        "30589972",
-                "Kevet PledgedAsset XXXX-9972":     "30589972",
-                "Kevet RothIRA ...218":             "90481218",
-                "Kevet-RothIRA ...218":             "90481218",
-                "Kevet RothIRA XXXX-1218":          "90481218",
-                "Kevet SchwabIRA ...775":           "29939775",
-                "Kevet-SchwabIRA ...775":           "29939775",
-                "Kevet SchwabIRA XXXX-9775":        "29939775",
-                "Kevet Schwab One ...772":          "29939772",
-                "Kevet Schwab One XXXX-9772":       "29939772",
-                "Sandy-InheritedIRA ...348":        "68841348",
-                "Sandy Inh IRA ...348":             "68841348",
-                "Sandy-Inh.IRA ...348":             "68841348",
-                "Sandy Inh IRA XXXX-1348":          "68841348",
-                "Sandy Inh Roth XXXX-8895":         "49928895",
-                "Sandy IRA ...635":                 "29943635",
-                "Sandy IRA XXXX-3635":              "29943635",
-                "Sandy-SchwabIRA ...635":           "29943635",
-                "Sandy Schwab One ...874":          "80268874",
-                "Sandy Schwab One XXXX-8874":       "80268874",
-                }
+        self.acctmap = self.config.get("acctmap", None)
 
     def prepare_table(self, rdr):
         if '' in rdr.fieldnames():
