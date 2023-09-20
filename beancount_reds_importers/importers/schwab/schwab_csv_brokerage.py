@@ -66,7 +66,7 @@ class Importer(csvreader.Importer, investments.Importer):
             'Redemption Adj':               'selldebt',
             }
         self.skip_transaction_types = ['Journal']
-        self.skip_head_rows = 1
+        self.skip_head_rows = 0
         self.acctmap = self.config.get("acctmap", None)
 
     def prepare_table(self, rdr):
@@ -86,11 +86,9 @@ class Importer(csvreader.Importer, investments.Importer):
 
     def deep_identify(self, file):
         head = file.head()
-        want = self.config.get("account_number", "")
-        for raw, acct in self.acctmap.items():
-            if acct == want and re.match(rf'"Transactions  for account {raw}.*', head):
-                return True
-        return False
+        return re.search(
+            r'"Date","Action","Symbol","Description","Quantity","Price","Fees & Comm","Amount"',
+            head) and re.search(self.config.get("filename_pattern", ""), file.name)
 
     def get_transactions(self):
         half_sale = {}
@@ -115,4 +113,10 @@ class Importer(csvreader.Importer, investments.Importer):
         # just in case there are any unclosed halves left
         for ot in half_sale.values():
             yield ot
+
+    def prepare_raw_file(self, rdr):
+        # pre 2023-08 history files have a title line, later do not
+        if rdr[0][0].startswith('Transactions'):
+            rdr = rdr.skip(1)
+        return rdr
 
