@@ -67,7 +67,6 @@ class Importer(csvreader.Importer, investments.Importer):
             }
         self.skip_transaction_types = ['Journal']
         self.skip_head_rows = 0
-        self.acctmap = self.config.get("acctmap", None)
 
     def prepare_table(self, rdr):
         if '' in rdr.fieldnames():
